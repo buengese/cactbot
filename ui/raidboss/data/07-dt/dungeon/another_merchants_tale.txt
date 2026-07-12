@@ -1,0 +1,117 @@
+### ANOTHER MERCHANT'S TALE
+# ZoneId: 525
+
+hideall "--Reset--"
+hideall "--sync--"
+
+# .*is no longer sealed
+0.0 "--Reset--" SystemLogMessage { id: "7DE" } window 0,100000 jump 0
+
+#~~~~~~~~~~~~~~~~~~~~#
+# DARYA THE SEA-MAID #
+#~~~~~~~~~~~~~~~~~~~~#
+# The Sea-Maid's Mirror
+
+# -p B32E:1012
+# -ii B30E B317 B32A B324 B328 B31A B31B B32C B30F B310 B311 B312 B313 B31D B31E
+
+# The Sea-Maid's Mirror will be sealed off
+1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "150A" } window 10000,0
+1007.0 "--sync--" StartsUsing { id: "B32E", source: "Darya the Sea-maid" } window 20,20
+1012.0 "Piercing Plunge" Ability { id: "B32E", source: "Darya the Sea-maid" }
+
+1025.3 "Familiar Call" Ability { id: "B2CB", source: "Darya the Sea-maid" }
+1039.0 "Echoed Serenade" Ability { id: "B2CD", source: "Darya the Sea-maid" }
+1042.7 "Watersong" Ability { id: ["B30F", "B310", "B311", "B312", "B313"], source: "Seaborn.*" }
+# Hydrobullet: boss telegraphs (B317, ignored); helpers resolve the spread damage (B318).
+# Only the resolve time matters -- two spread waves.
+1045.8 "Hydrobullet Spread 1" Ability { id: "B318", source: "Darya the Sea-maid" }
+1052.0 "Hydrobullet Spread 2" Ability { id: "B318", source: "Darya the Sea-maid" }
+1056.0 "Surging Current" Ability { id: "B329", source: "Darya the Sea-maid" }
+1070.1 "Alluring Order" Ability { id: "B325", source: "Darya the Sea-maid" }
+1079.7 "Swimming in the Air" Ability { id: "B315", source: "Darya the Sea-maid" }
+1093.2 "Hydrofall + Tidalspout" Ability { id: "B316", source: "Darya the Sea-maid" }
+1104.6 "Ceaseless Current" Ability { id: "B326", source: "Darya the Sea-maid" }
+1116.6 "Cross Current" Ability { id: "B323", source: "Darya the Sea-maid" }
+1132.4 "Piercing Plunge" Ability { id: "B32E", source: "Darya the Sea-maid" }
+1143.5 "Alluring Order" Ability { id: "B325", source: "Darya the Sea-maid" }
+1151.6 "Sunken Treasure" Ability { id: "B319", source: "Darya the Sea-maid" }
+1168.7 "Tidalspout + Sphere Shatter" Ability { id: "B322", source: "Darya the Sea-maid" }
+1184.2 "Aqua Spear" Ability { id: "B31C", source: "Darya the Sea-maid" }
+1190.9 "Aqua Spear (tiles)" Ability { id: "B31F", source: "Darya the Sea-maid" }
+1198.3 "Familiar Call" Ability { id: "B2CB", source: "Darya the Sea-maid" }
+1212.0 "Echoed Serenade" Ability { id: "B2CD", source: "Darya the Sea-maid" }
+1223.6 "Aqua Ball" Ability { id: "B32B", source: "Darya the Sea-maid" }
+1230.6 "Cross Current" Ability { id: "B323", source: "Darya the Sea-maid" }
+1241.6 "Familiar Call" Ability { id: "B2CB", source: "Darya the Sea-maid" }
+1251.7 "Echoed Reprise" Ability { id: "B314", source: "Darya the Sea-maid" }
+1266.5 "Surging Current" Ability { id: "B329", source: "Darya the Sea-maid" }
+1279.5 "Sea Shackles" Ability { id: "B320", source: "Darya the Sea-maid" }
+1285.6 "Sunken Treasure" Ability { id: "B319", source: "Darya the Sea-maid" }
+1295.7 "Aqua Ball" Ability { id: "B32B", source: "Darya the Sea-maid" }
+1302.5 "Hydrobullet (stack)" Ability { id: "B7F0", source: "Darya the Sea-maid" }
+1318.8 "Piercing Plunge" Ability { id: "B32E", source: "Darya the Sea-maid" }
+
+# Enrage: Piercing Plunge (B330, 10s cast). Timed from a wipe-to-enrage pull.
+1328.0 "Enrage" StartsUsing { id: "B330", source: "Darya the Sea-maid" } window 10,10
+
+#~~~~~~~~~~~~~~~~~#
+# LONE SWORDMASTER #
+#~~~~~~~~~~~~~~~~~#
+# The Wound of the Heavens
+# NOTE: partial timeline -- reference log only reached ~210s (no kill/enrage).
+
+# -p B65E:2014.1
+# -ii B60F B663 B664 B666 B667 B668 B669 B66D B67E B67F
+
+# The Wound of the Heavens will be sealed off
+2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "150D" } window 10000,0
+2009.0 "--sync--" StartsUsing { id: "B65E", source: "Lone Swordmaster" } window 20,20
+2014.1 "Steelsbreath Release" Ability { id: "B65E", source: "Lone Swordmaster" }
+
+# Near/Far to Heaven: variant per pull -- B9CE=Near1 B9CF=Far1 B9D0=Near2 B9D1=Far2 (all 5.0s cast)
+2026.2 "Near/Far to Heaven 1" Ability { id: ["B9CE", "B9CF", "B9D0", "B9D1"], source: "Lone Swordmaster" }
+# Heavens' Confluence is just the damage from Near/Far to Heaven -- omitted for now.
+# 2027.4 "Heavens' Confluence" Ability { id: "B663", source: "Lone Swordmaster" }
+2033.4 "Malefic Quartering" Ability { id: "B665", source: "Lone Swordmaster" }
+2041.0 "Shifting Horizon" Ability { id: "B66C", source: "Lone Swordmaster" }
+2050.1 "Malefic Portent" Ability { id: "B66A", source: "Lone Swordmaster" }
+2052.5 "Unyielding Will" Ability { id: "B66E", source: "Force of Will" }
+# Echoing: variant per pull -- B673=Eight (cross) / B670=Orbit (donut), both 4.0s cast
+2062.2 "Echoing Eight/Orbit" Ability { id: ["B673", "B670"], source: "Lone Swordmaster" }
+2073.6 "Waiting Wounds" Ability { id: "B679", source: "Lone Swordmaster" }
+2080.7 "Near/Far to Heaven 2" Ability { id: ["B9CE", "B9CF", "B9D0", "B9D1"], source: "Lone Swordmaster" }
+2087.9 "Silent Eight" Ability { id: "B677", source: "Lone Swordmaster" }
+2093.0 "Resounding Silence" Ability { id: "B678", source: "Lone Swordmaster" }
+2096.0 "Echoing Eight/Orbit (resolve)" Ability { id: ["B674", "B672"], source: "Lone Swordmaster" }
+2097.3 "Maw of the Wolf" Ability { id: "B67B", source: "Lone Swordmaster" }
+2107.0 "Fangs of the Underworld 1" Ability { id: "B67D", source: "Lone Swordmaster" }
+2108.1 "Fangs of the Underworld 2"
+2109.2 "Fangs of the Underworld 3"
+2119.1 "Steelsbreath Release" Ability { id: "B680", source: "Lone Swordmaster" }
+2125.2 "Malefic Quartering" Ability { id: "B665", source: "Lone Swordmaster" }
+2133.5 "Steel Horizon" Ability { id: "B681", source: "Lone Swordmaster" }
+2142.6 "Silent Heat" Ability { id: "B685", source: "Lone Swordmaster" }
+2146.8 "Will of the Underworld" Ability { id: "B682", source: "Force of Will" }
+2147.6 "Resounding Silence" Ability { id: "B678", source: "Lone Swordmaster" }
+2154.6 "Near/Far to Heaven 3" Ability { id: ["B9CE", "B9CF", "B9D0", "B9D1"], source: "Lone Swordmaster" }
+# 2156.2 "Heavens' Confluence" Ability { id: "B663", source: "Lone Swordmaster" }
+2163.0 "Malefic Quartering" Ability { id: "B665", source: "Lone Swordmaster" }
+2170.4 "Cardinal Horizons" Ability { id: "B68D", source: "Lone Swordmaster" }
+2176.1 "Maw of the Wolf" Ability { id: "B67B", source: "Lone Swordmaster" }
+2179.9 "Will of the Underworld" Ability { id: "B69D", source: "Force of Will" }
+2193.4 "Malefic Portent" Ability { id: "B66A", source: "Lone Swordmaster" }
+2201.8 "Malefic Alignment" Ability { id: "B683", source: "Lone Swordmaster" }
+2210.0 "Fangs of the Underworld 1" Ability { id: "B67D", source: "Lone Swordmaster" }
+2211.1 "Fangs of the Underworld 2"
+2212.2 "Fangs of the Underworld 3"
+2222.9 "Steelsbreath Release" Ability { id: "B680", source: "Lone Swordmaster" }
+2226.9 "Plummet" Ability { id: ["B688", "B689"], source: "Lone Swordmaster" }
+# Deepest available pull ends ~231s here (boss never killed in logs -- no Pari pulls exist).
+# Remainder of the fight + enrage unknown until a clear log is available.
+
+#~~~~~~~~~~~~~~~#
+# PARI OF PLENTY #
+#~~~~~~~~~~~~~~~#
+# NOTE: boss 3 not present in the reference log -- no timeline available yet.
+# Seal param1 unknown (boss 1 = 150A, boss 2 = 150D). Add block at 3000.0 when a log exists.
