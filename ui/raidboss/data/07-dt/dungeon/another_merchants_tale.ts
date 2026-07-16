@@ -69,6 +69,23 @@ const lsmCasterFromSide = (x: number, z: number): number => {
   return 0;
 };
 
+// Per-position output config for Will of the Underworld: each of the 8 safe spots can be
+// reported as its direction or as a specific waymark (there is no single convention for
+// where groups place marks, so this is fully configurable).
+const willWaymarkOptions = {
+  en: {
+    'Direction': 'dir',
+    'A': 'A',
+    'B': 'B',
+    'C': 'C',
+    'D': 'D',
+    '1': '1',
+    '2': '2',
+    '3': '3',
+    '4': '4',
+  },
+};
+
 // Shared by the Familiar Order and Echoed Reprise triggers (Reprise replays the order).
 const familiarOutputStrings = {
   order: {
@@ -124,6 +141,66 @@ const familiarOutputStrings = {
 const triggerSet: TriggerSet<Data> = {
   id: 'AnotherMerchantsTale',
   zoneId: ZoneId.AnotherMerchantsTale,
+  config: [
+    // Will of the Underworld: for each of the 8 safe spots, output its direction or a
+    // chosen waymark. Inner tiles = NW/NE/SW/SE; outer cardinals = N/E/S/W.
+    {
+      id: 'willMarkNW',
+      name: { en: 'Will of the Underworld: NW inner tile' },
+      type: 'select',
+      options: willWaymarkOptions,
+      default: 'dir',
+    },
+    {
+      id: 'willMarkNE',
+      name: { en: 'Will of the Underworld: NE inner tile' },
+      type: 'select',
+      options: willWaymarkOptions,
+      default: 'dir',
+    },
+    {
+      id: 'willMarkSW',
+      name: { en: 'Will of the Underworld: SW inner tile' },
+      type: 'select',
+      options: willWaymarkOptions,
+      default: 'dir',
+    },
+    {
+      id: 'willMarkSE',
+      name: { en: 'Will of the Underworld: SE inner tile' },
+      type: 'select',
+      options: willWaymarkOptions,
+      default: 'dir',
+    },
+    {
+      id: 'willMarkN',
+      name: { en: 'Will of the Underworld: North outer tile' },
+      type: 'select',
+      options: willWaymarkOptions,
+      default: 'dir',
+    },
+    {
+      id: 'willMarkE',
+      name: { en: 'Will of the Underworld: East outer tile' },
+      type: 'select',
+      options: willWaymarkOptions,
+      default: 'dir',
+    },
+    {
+      id: 'willMarkS',
+      name: { en: 'Will of the Underworld: South outer tile' },
+      type: 'select',
+      options: willWaymarkOptions,
+      default: 'dir',
+    },
+    {
+      id: 'willMarkW',
+      name: { en: 'Will of the Underworld: West outer tile' },
+      type: 'select',
+      options: willWaymarkOptions,
+      default: 'dir',
+    },
+  ],
   timelineFile: 'another_merchants_tale.txt',
   initData: () => ({
     daryaFamiliarOrder: [],
@@ -391,12 +468,25 @@ const triggerSet: TriggerSet<Data> = {
       alertText: (data, _matches, output) => {
         const casters = data.lsmWillCasters;
         data.lsmWillCasters = [];
+        // Each position outputs its direction unless the user configured a waymark for it.
+        const call = (configId: string, dirKey: string): string => {
+          const cfg = data.triggerSetConfig[configId];
+          if (typeof cfg === 'string' && cfg !== 'dir')
+            return output.waymark!({ mark: cfg });
+          return output[dirKey]!();
+        };
         const mask = data.lsmMaleficMask | data.lsmPortentTetherSide;
-        // Three unsafe sides -> one safe side -> go out on that side.
+        // Three unsafe sides -> one safe side -> outer cardinal tile.
         const safe = 15 & ~mask;
         if (safe === 8 || safe === 4 || safe === 1 || safe === 2) {
-          const dir = safe === 8 ? 'north' : safe === 4 ? 'south' : safe === 1 ? 'east' : 'west';
-          return output[`${dir}Out`]!();
+          const [dir, letter] = safe === 8
+            ? ['north', 'N']
+            : safe === 4
+            ? ['south', 'S']
+            : safe === 1
+            ? ['east', 'E']
+            : ['west', 'W'];
+          return call(`willMark${letter}`, `${dir}Out`);
         }
         // Two unsafe sides (corner pair) -> inner quadrant.
         const unsafeNS = mask & 12; // N|S
@@ -416,7 +506,8 @@ const triggerSet: TriggerSet<Data> = {
         }
         if (row === undefined || column === undefined)
           return;
-        return output[`${row}${column}`]!();
+        const quad = `${row}${column}`;
+        return call(`willMark${quad}`, quad);
       },
       outputStrings: {
         NW: { en: 'NW', de: 'NW', fr: 'NO', ja: '北西', cn: '西北', ko: '북서' },
@@ -455,6 +546,7 @@ const triggerSet: TriggerSet<Data> = {
           cn: '西外',
           ko: '서쪽 밖',
         },
+        waymark: { en: '${mark}' },
       },
     },
   ],
