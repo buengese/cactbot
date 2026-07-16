@@ -476,16 +476,23 @@ const triggerSet: TriggerSet<Data> = {
           return output[dirKey]!();
         };
         const mask = data.lsmMaleficMask | data.lsmPortentTetherSide;
-        // Three unsafe sides -> one safe side -> outer cardinal tile.
         const safe = 15 & ~mask;
+        // Three unsafe sides -> one safe side -> a single outer tile. Which tile is NOT
+        // simply "the safe side out": a fixed floor pinwheel (map effect, verified constant
+        // across many logged sessions and patches) leaves exactly one safe outer tile per
+        // edge, each in a fixed lane -- North edge in the WEST column, South in the EAST
+        // column, East in the NORTH row, West in the SOUTH row. The player's safe outer
+        // tile is the pinwheel tile guarded by their safe-side caster, so read that caster's
+        // lane: a safe N/S caster sits in a column (west -> North, east -> South); a safe
+        // E/W caster sits in a row (north -> East, south -> West). This can land on the
+        // opposite cardinal from the safe side.
         if (safe === 8 || safe === 4 || safe === 1 || safe === 2) {
-          const [dir, letter] = safe === 8
-            ? ['north', 'N']
-            : safe === 4
-            ? ['south', 'S']
-            : safe === 1
-            ? ['east', 'E']
-            : ['west', 'W'];
+          const safeCaster = casters.find((c) => lsmCasterFromSide(c.x, c.z) === safe);
+          if (safeCaster === undefined)
+            return;
+          const [dir, letter] = (safe === 8 || safe === 4)
+            ? (safeCaster.x < lsmCenterX ? ['north', 'N'] : ['south', 'S'])
+            : (safeCaster.z < lsmCenterZ ? ['east', 'E'] : ['west', 'W']);
           return call(`willMark${letter}`, `${dir}Out`);
         }
         // Two unsafe sides (corner pair) -> inner quadrant.
