@@ -19,6 +19,8 @@ export interface Data extends RaidbossData {
   lsmWillCasters: { x: number; z: number }[];
   lsmWillActive: boolean;
   lsmPortentTetherSide: number;
+  lsmLargeWillCasters: { x: number; z: number }[];
+  lsmRocks: { x: number; z: number }[];
 }
 
 // During Familiar Call, the boss emits one ActorControlExtra (line 273) VFX per
@@ -67,6 +69,56 @@ const lsmCasterFromSide = (x: number, z: number): number => {
   if (x < 155)
     return 2; // W edge
   return 0;
+};
+
+// Malefic2 "Will of the Underworld (Large)" (BA93, enrage phase): a 4-wave version where
+// each of the four casters (one per edge) throws a WIDTH-20 rect covering HALF the arena
+// (not a single lane), gated by the player's Malefic side as usual. Two "Fallen Rock"
+// pillars spawn on a diagonal; a rect is blocked in a rock's shadow, so the only safe spot
+// is tucked behind a rock. Each player keeps ONE safe side for all four waves; only the
+// casters rotate (a pinwheel: opposite edges always cover opposite halves), so the safe
+// rock + side changes each wave.
+//
+// Resolve (validated against every logged wave + every surviving player position):
+//  - A player with safe side E/W is threatened by the N+S pair (vertical beams) plus one of
+//    E/W. The single E/W caster covers a z-half, so the player's safe z-half is the other;
+//    stand on THAT side (N or S) of the rock that sits in the column of the N/S caster firing
+//    toward that safe half.
+//  - Symmetric for safe side N/S: the single N/S caster fixes the safe x-half; stand on that
+//    side (E or W) of the rock in the row of the E/W caster firing toward it.
+type LsmRock = { x: number; z: number };
+const lsmLargeWillResolve = (
+  safe: number, // safe-side bit (E=1,W=2,S=4,N=8)
+  casters: { x: number; z: number }[],
+  rocks: LsmRock[],
+): { side: 'north' | 'south' | 'east' | 'west'; rock: string } | undefined => {
+  const edge = (bit: number) => casters.find((c) => lsmCasterFromSide(c.x, c.z) === bit);
+  const n = edge(8); const s = edge(4); const e = edge(1); const w = edge(2);
+  if (n === undefined || s === undefined || e === undefined || w === undefined)
+    return undefined;
+  const west = rocks.find((r) => r.x < lsmCenterX);
+  const east = rocks.find((r) => r.x >= lsmCenterX);
+  const north = rocks.find((r) => r.z < lsmCenterZ);
+  const south = rocks.find((r) => r.z >= lsmCenterZ);
+  const quad = (r: LsmRock) => `${r.z < lsmCenterZ ? 'N' : 'S'}${r.x < lsmCenterX ? 'W' : 'E'}`;
+  if (safe === 1 || safe === 2) {
+    // safe E/W: the single unsafe horizontal caster is W (if safe E) or E (if safe W).
+    const h = safe === 1 ? w : e;
+    const safeNorth = h.z >= lsmCenterZ; // h covers south -> safe half is north
+    const shooter = safeNorth ? s : n; // caster firing toward the safe z-half
+    const rock = shooter.x < lsmCenterX ? west : east;
+    if (rock === undefined)
+      return undefined;
+    return { side: safeNorth ? 'north' : 'south', rock: quad(rock) };
+  }
+  // safe N/S: the single unsafe vertical caster is S (if safe N) or N (if safe S).
+  const v = safe === 8 ? s : n;
+  const safeEast = v.x < lsmCenterX; // v covers west -> safe half is east
+  const shooter = safeEast ? w : e; // W fires east, E fires west
+  const rock = shooter.z < lsmCenterZ ? north : south;
+  if (rock === undefined)
+    return undefined;
+  return { side: safeEast ? 'east' : 'west', rock: quad(rock) };
 };
 
 // Per-position output config for Will of the Underworld: each of the 8 safe spots can be
@@ -211,6 +263,8 @@ const triggerSet: TriggerSet<Data> = {
     lsmWillCasters: [],
     lsmWillActive: false,
     lsmPortentTetherSide: 0,
+    lsmLargeWillCasters: [],
+    lsmRocks: [],
   }),
   triggers: [
     {
@@ -554,6 +608,66 @@ const triggerSet: TriggerSet<Data> = {
           ko: '서쪽 밖',
         },
         waymark: { en: '${mark}' },
+      },
+    },
+    {
+      // Will of the Underworld (Large): the two Fallen Rock pillars spawn ~50s ahead (around
+      // Plummet) and stay for all four waves. Collect their positions (diagonal pair). Only
+      // these rocks are named "Fallen Rock" in this phase, so no filtering is needed.
+      id: 'AMT LSM Large Will Rocks Collect',
+      type: 'AddedCombatant',
+      netRegex: { name: 'Fallen Rock' },
+      run: (data, matches) => {
+        const x = parseFloat(matches.x);
+        const z = parseFloat(matches.y);
+        if (!data.lsmRocks.some((r) => Math.abs(r.x - x) < 1 && Math.abs(r.z - z) < 1))
+          data.lsmRocks.push({ x, z });
+      },
+    },
+    {
+      // Collect the four Large Will casters (one per edge) for the current wave.
+      id: 'AMT LSM Large Will Collect',
+      type: 'StartsUsing',
+      netRegex: { id: 'BA93' },
+      run: (data, matches) =>
+        data.lsmLargeWillCasters.push({ x: parseFloat(matches.x), z: parseFloat(matches.y) }),
+    },
+    {
+      // Resolve each Large Will wave: with 3 unsafe sides the only safe spot is behind a
+      // rock. lsmLargeWillResolve returns which rock and which side to tuck against, from the
+      // wave's caster arrangement + the fixed rocks + the player's (constant) safe side.
+      id: 'AMT LSM Large Will',
+      type: 'StartsUsing',
+      netRegex: { id: 'BA93', capture: false },
+      delaySeconds: 0.3,
+      durationSeconds: 4.2,
+      suppressSeconds: 5,
+      alertText: (data, _matches, output) => {
+        const casters = data.lsmLargeWillCasters;
+        data.lsmLargeWillCasters = [];
+        const safe = 15 & ~data.lsmMaleficMask;
+        if (safe !== 1 && safe !== 2 && safe !== 4 && safe !== 8)
+          return;
+        if (casters.length < 4 || data.lsmRocks.length < 2)
+          return;
+        const res = lsmLargeWillResolve(safe, casters, data.lsmRocks);
+        if (res === undefined)
+          return;
+        return output.behindRock!({ dir: output[res.side]!(), rock: res.rock });
+      },
+      outputStrings: {
+        behindRock: {
+          en: '${dir} of ${rock} rock',
+          de: '${dir} vom ${rock} Fels',
+          fr: '${dir} du rocher ${rock}',
+          ja: '${rock}の岩の${dir}',
+          cn: '${rock}岩石的${dir}',
+          ko: '${rock} 바위 ${dir}',
+        },
+        north: { en: 'North', de: 'Norden', fr: 'Nord', ja: '北', cn: '北', ko: '북' },
+        south: { en: 'South', de: 'Süden', fr: 'Sud', ja: '南', cn: '南', ko: '남' },
+        east: { en: 'East', de: 'Osten', fr: 'Est', ja: '東', cn: '东', ko: '동' },
+        west: { en: 'West', de: 'Westen', fr: 'Ouest', ja: '西', cn: '西', ko: '서' },
       },
     },
   ],

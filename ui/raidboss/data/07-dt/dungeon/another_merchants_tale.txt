@@ -59,7 +59,7 @@ hideall "--sync--"
 # LONE SWORDMASTER #
 #~~~~~~~~~~~~~~~~~#
 # The Wound of the Heavens
-# NOTE: partial timeline -- reference log only reached ~210s (no kill/enrage).
+# NOTE: full timeline to enrage, built from two enrage pulls (2026-07-18 log).
 
 # -p B65E:2014.1
 # -ii B60F B663 B664 B666 B667 B668 B669 B66D B67E B67F
@@ -107,8 +107,26 @@ hideall "--sync--"
 2212.2 "Fangs of the Underworld 3"
 2222.9 "Steelsbreath Release" Ability { id: "B680", source: "Lone Swordmaster" }
 2226.9 "Plummet" Ability { id: ["B688", "B689"], source: "Lone Swordmaster" }
-# Deepest available pull ends ~231s here (boss never killed in logs -- no Pari pulls exist).
-# Remainder of the fight + enrage unknown until a clear log is available.
+
+# Late mechanics (from Plummet onward -- consistent across both enrage pulls).
+# The Echoing here is always Echoing Eight (cross), never Orbit.
+2244.1 "Echoing Eight" Ability { id: "B673", source: "Lone Swordmaster" }
+2252.2 "Echoing Eight (resolve)" Ability { id: "B674", source: "Lone Swordmaster" }
+2257.3 "Malefic Quartering" Ability { id: "B665", source: "Lone Swordmaster" }
+2265.7 "Cardinal Horizons" Ability { id: "B68D", source: "Lone Swordmaster" }
+# Will of the Underworld (Large): BA93, the 4-hit variant seen only here. Almost always
+# resolves in full -- even fast groups rarely kill the boss before this goes off.
+2275.2 "Will of the Underworld" Ability { id: "BA93", source: "Force of Will" }
+2296.8 "Steelsbreath Release" Ability { id: "B65E", source: "Lone Swordmaster" }
+# Enrage phase proper: fast groups kill around Steelsbreath Release above; anything from
+# this last Fangs onward is realistically only reached on a wipe-to-enrage.
+2305.0 "Fangs of the Underworld 1" Ability { id: "B67D", source: "Lone Swordmaster" }
+2306.1 "Fangs of the Underworld 2"
+2307.2 "Fangs of the Underworld 3"
+2321.1 "Malefic Quartering" Ability { id: "B665", source: "Lone Swordmaster" }
+
+# Enrage: Mortal Fate (B68E, 12+1s cast -> B68F 90-degree cone, wipe).
+2329.2 "Enrage" StartsUsing { id: "B68E", source: "Lone Swordmaster" } window 30,30
 
 #~~~~~~~~~~~~~~~#
 # PARI OF PLENTY #
