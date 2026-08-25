@@ -91,7 +91,7 @@ const lsmLargeWillResolve = (
   safe: number, // safe-side bit (E=1,W=2,S=4,N=8)
   casters: { x: number; z: number }[],
   rocks: LsmRock[],
-): { side: 'north' | 'south' | 'east' | 'west'; rock: string } | undefined => {
+): { side: 'north' | 'south' | 'east' | 'west'; rock: string; zone: string } | undefined => {
   const edge = (bit: number) => casters.find((c) => lsmCasterFromSide(c.x, c.z) === bit);
   const n = edge(8); const s = edge(4); const e = edge(1); const w = edge(2);
   if (n === undefined || s === undefined || e === undefined || w === undefined)
@@ -109,7 +109,10 @@ const lsmLargeWillResolve = (
     const rock = shooter.x < lsmCenterX ? west : east;
     if (rock === undefined)
       return undefined;
-    return { side: safeNorth ? 'north' : 'south', rock: quad(rock) };
+    // The shadow strip lives in the safe z-half, in the rock's column -- which can be a
+    // DIFFERENT quadrant than the rock itself (e.g. a south rock's shadow reaching north).
+    const zoneQuad = `${safeNorth ? 'N' : 'S'}${rock.x < lsmCenterX ? 'W' : 'E'}`;
+    return { side: safeNorth ? 'north' : 'south', rock: quad(rock), zone: zoneQuad };
   }
   // safe N/S: the single unsafe vertical caster is S (if safe N) or N (if safe S).
   const v = safe === 8 ? s : n;
@@ -118,7 +121,8 @@ const lsmLargeWillResolve = (
   const rock = shooter.z < lsmCenterZ ? north : south;
   if (rock === undefined)
     return undefined;
-  return { side: safeEast ? 'east' : 'west', rock: quad(rock) };
+  const zoneQuad = `${rock.z < lsmCenterZ ? 'N' : 'S'}${safeEast ? 'E' : 'W'}`;
+  return { side: safeEast ? 'east' : 'west', rock: quad(rock), zone: zoneQuad };
 };
 
 // Per-position output config for Will of the Underworld: each of the 8 safe spots can be
@@ -633,9 +637,10 @@ const triggerSet: TriggerSet<Data> = {
         data.lsmLargeWillCasters.push({ x: parseFloat(matches.x), z: parseFloat(matches.y) }),
     },
     {
-      // Resolve each Large Will wave: with 3 unsafe sides the only safe spot is behind a
-      // rock. lsmLargeWillResolve returns which rock and which side to tuck against, from the
-      // wave's caster arrangement + the fixed rocks + the player's (constant) safe side.
+      // Resolve each Large Will wave: with 3 unsafe sides the only safe spot is a rock's
+      // shadow. lsmLargeWillResolve returns the destination quadrant plus the rock+side to
+      // line up behind -- the shadow can reach a DIFFERENT quadrant than the rock, so we lead
+      // with the quadrant. Derived from the caster arrangement + fixed rocks + safe side.
       id: 'AMT LSM Large Will',
       type: 'StartsUsing',
       netRegex: { id: 'BA93', capture: false },
@@ -653,16 +658,16 @@ const triggerSet: TriggerSet<Data> = {
         const res = lsmLargeWillResolve(safe, casters, data.lsmRocks);
         if (res === undefined)
           return;
-        return output.behindRock!({ dir: output[res.side]!(), rock: res.rock });
+        return output.behindRock!({ zone: res.zone, dir: output[res.side]!(), rock: res.rock });
       },
       outputStrings: {
         behindRock: {
-          en: '${dir} of ${rock} rock',
-          de: '${dir} vom ${rock} Fels',
-          fr: '${dir} du rocher ${rock}',
-          ja: '${rock}の岩の${dir}',
-          cn: '${rock}岩石的${dir}',
-          ko: '${rock} 바위 ${dir}',
+          en: '${zone}: ${dir} of ${rock} rock',
+          de: '${zone}: ${dir} vom ${rock} Fels',
+          fr: '${zone} : ${dir} du rocher ${rock}',
+          ja: '${zone}: ${rock}の岩の${dir}',
+          cn: '${zone}: ${rock}岩石的${dir}',
+          ko: '${zone}: ${rock} 바위 ${dir}',
         },
         north: { en: 'North', de: 'Norden', fr: 'Nord', ja: '北', cn: '北', ko: '북' },
         south: { en: 'South', de: 'Süden', fr: 'Sud', ja: '南', cn: '南', ko: '남' },
